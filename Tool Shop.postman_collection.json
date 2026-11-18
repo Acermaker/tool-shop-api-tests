@@ -1,0 +1,350 @@
+{
+  "info": {
+    "_postman_id": "e6ab864a-e9fe-4328-8249-6d777e52586a",
+    "name": "Tool Shop",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "58001049",
+    "_collection_link": "https://go.postman.co/collection/58001049-e6ab864a-e9fe-4328-8249-6d777e52586a?source=collection_link"
+  },
+  "item": [
+    {
+      "name": "Registration form fillup",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "// Random Nepali phone number\r\nconst prefixes = [\"984\",\"985\",\"986\",\"987\",\"988\",\"989\",\"980\",\"981\",\"982\",\"983\"];\r\nconst prefix = prefixes[Math.floor(Math.random() * prefixes.length)];\r\nconst randomDigits = Math.floor(1000000 + Math.random() * 9000000);\r\npm.environment.set(\"nepal_phone\", prefix + randomDigits.toString());\r\n\r\n// Unique email and throwaway password for this run\r\npm.environment.set(\"user_email\", `user_${Date.now()}@example.com`);\r\npm.environment.set(\"test_password\", `Test@${Date.now()}`);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"first_name\": \"{{$randomFirstName}}\",\n  \"last_name\": \"{{$randomLastName}}\",\n  \"address\": {\n    \"street\": \"{{$randomStreetAddress}}\",\n    \"house_number\": \"12\",\n    \"city\": \"Kathmandu\",\n    \"state\": \"Bagmati\",\n    \"country\": \"Nepal\",\n    \"postal_code\": \"44600\"\n  },\n  \"phone\": \"{{nepal_phone}}\",\n  \"dob\": \"1970-01-01\",\n  \"password\": \"{{test_password}}\",\n  \"email\": \"{{user_email}}\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{base_url}}/users/register",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "users",
+            "register"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Login fillup",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const res = pm.response.json();\r\npm.collectionVariables.set(\"access_token\", res.access_token);\r\n\r\npm.test(\"login successful and token received\", function (){\r\n    pm.response.to.have.status(200);\r\n    pm.expect(res.access_token).to.not.be.empty;\r\n});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "noauth"
+        },
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"email\": \"{{user_email}}\",\r\n  \"password\": \"{{test_password}}\"\r\n}\r\n",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{base_url}}/users/login",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "users",
+            "login"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Product by Categories",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const res = pm.response.json();\r\nconst subCatId = res[0].sub_categories[0].id;\r\npm.collectionVariables.set(\"category_id\", subCatId);\r\n\r\npm.test(\"Categories retrieved sucessfully\", function (){\r\n    pm.response.to.have.status(200);\r\n    pm.expect(res).to.be.an(\"array\").that.is.not.empty;\r\n});\r\n\r\n// console.log(\"Saved Category ID:\", subCatId);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/categories/tree",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "categories",
+            "tree"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Product Search for Available Tools",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const res = pm.response.json();\r\n\r\nif (res.data && res.data.length > 0) {\r\n    pm.collectionVariables.set(\"product_id\", res.data[0].id);\r\n};\r\n\r\npm.test(\"Search status is 200 OK\", function (){\r\n    pm.response.to.have.status(200);\r\n});\r\n\r\npm.test(\"Returned product match search query\", function () {\r\n    pm.expect(res.data[0].name.toLowerCase()).to.include(\"hammer\");\r\n    pm.expect(res.data).to.be.an(\"array\").that.is.not.empty;\r\n});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{base_url}}/products/search?q=hammer",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "products",
+            "search"
+          ],
+          "query": [
+            {
+              "key": "q",
+              "value": "hammer"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Create an Empty cart",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const res = pm.response.json();\r\npm.collectionVariables.set(\"cart_id\", res.id);\r\n\r\npm.test(\"Cart created successfully (201 Created)\", function () { \r\n    pm.response.to.have.status(201);\r\n    pm.expect(res.id).to.not.be.empty;\r\n\r\n});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/carts",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "carts"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Add Product to Cart",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const res = pm.response.json();\r\n\r\npm.test(\"Cart created and item added to the cart\", function() {\r\n    pm.expect(res.result).to.eql(\"item added or updated\");\r\n    pm.response.to.have.status(200);\r\n});\r\n\r\n\r\nif (res.data && res.data.length > 0) {\r\n    pm.collectionVariables.set(\"product_id\", res.data[0].id);\r\n    console.log(\"Saved Product ID:\", res.data[0].id);\r\n}"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n   \"product_id\": \"{{product_id}}\",\r\n   \"quantity\": 1\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{base_url}}/carts/{{cart_id}}",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "carts",
+            "{{cart_id}}"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "For lookup",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const res = pm.response.json();\r\nconsole.log(res);   // check the field names in the Console\r\n\r\nconst data = Array.isArray(res) ? res[0] : res;\r\n\r\npm.environment.set(\"billing_street\", data.street);\r\npm.environment.set(\"billing_city\", data.city);\r\npm.environment.set(\"billing_state\", data.state);\r\n\r\npm.test(\"Postcode lookup returned an address\", function () {\r\n    pm.response.to.have.status(200);\r\n    pm.expect(data.city).to.not.be.empty;\r\n});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{access_token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/postcode-lookup?country=DE&postcode=10117&house_number=1",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "postcode-lookup"
+          ],
+          "query": [
+            {
+              "key": "country",
+              "value": "DE"
+            },
+            {
+              "key": "postcode",
+              "value": "10117"
+            },
+            {
+              "key": "house_number",
+              "value": "1"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Check Out",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const res = pm.response.json();\r\n\r\npm.test(\"Checkout successful (201 created)\", function () {\r\n    pm.response.to.have.status(201);\r\n    pm.expect(res.invoice_number).to.not.be.empty;\r\n    \r\n    });"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{access_token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"billing_street\": \"{{billing_street}}\",\r\n  \"billing_city\": \"{{billing_city}}\",\r\n  \"billing_state\": \"{{billing_state}}\",\r\n  \"billing_country\": \"DE\",\r\n  \"billing_postal_code\": \"10117\",\r\n  \"payment_method\": \"cash-on-delivery\",\r\n  \"payment_details\": {},\r\n  \"cart_id\": \"{{cart_id}}\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{base_url}}/invoices",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "invoices"
+          ]
+        }
+      },
+      "response": []
+    }
+  ],
+  "variable": [
+    {
+      "key": "access_token",
+      "value": ""
+    },
+    {
+      "key": "category_id",
+      "value": ""
+    },
+    {
+      "key": "product_id",
+      "value": ""
+    },
+    {
+      "key": "cart_id",
+      "value": ""
+    },
+    {
+      "key": "user_email",
+      "value": ""
+    }
+  ]
+}
